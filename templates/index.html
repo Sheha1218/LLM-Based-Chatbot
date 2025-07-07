@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mr AR - AI Chatbot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .chat-message { margin: 10px 0; padding: 10px; border-radius: 8px; }
+        .user-message { background-color: #DCF8C6; text-align: right; }
+        .bot-message { background-color: #F1F0F0; text-align: left; }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6">
+        <h1 class="text-2xl font-bold text-center mb-4">Mr AR - AI Chatbot</h1>
+        <div id="chat-container" class="bg-gray-50 rounded-lg p-4 mb-4 overflow-y-auto max-h-96">
+            <div class="chat-message bot-message">Hello! I'm Mr AR, your AI assistant. How can I help you today?</div>
+        </div>
+        <div class="flex">
+            <input
+                type="text"
+                id="user-input"
+                placeholder="Type your message..."
+                class="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <button
+                id="send-button"
+                class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
+            >
+                Send
+            </button>
+        </div>
+        <p id="error-message" class="text-red-500 text-sm mt-2 hidden"></p>
+    </div>
+
+    <script>
+        document.getElementById('send-button').addEventListener('click', async () => {
+            const userInput = document.getElementById('user-input').value;
+            const chatContainer = document.getElementById('chat-container');
+            const errorMessage = document.getElementById('error-message');
+
+            if (!userInput.trim()) return;
+
+            // Append user message
+            chatContainer.innerHTML += `<div class="chat-message user-message">${userInput}</div>`;
+            document.getElementById('user-input').value = "";
+            errorMessage.classList.add("hidden");
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userInput })
+                });
+
+                const data = await response.json();
+
+                if (data.response) {
+                    chatContainer.innerHTML += `<div class="chat-message bot-message">${data.response}</div>`;
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else if (data.error) {
+                    errorMessage.textContent = data.error;
+                    errorMessage.classList.remove("hidden");
+                }
+            } catch (err) {
+                errorMessage.textContent = "Error reaching server.";
+                errorMessage.classList.remove("hidden");
+            }
+        });
+    </script>
+</body>
+</html>
